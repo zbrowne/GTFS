@@ -10,11 +10,21 @@ import UIKit
 
 class ViewController: UITableViewController, XMLParserDelegate {
     
+    var xmlParser: XMLParser!
+    
+    var entryError: String?
+    var entryVehicle: String?
+    var entryLastTime: String?
+    
+    var currentParsedElement = String()
+    var weAreInsideAnItem = false
+    
+    var Elements = [String]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        let urlString = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni"
-        beginParsing(urlString: urlString)
+        refreshData()
     }
 
     override func didReceiveMemoryWarning() {
@@ -22,24 +32,71 @@ class ViewController: UITableViewController, XMLParserDelegate {
         // Dispose of any resources that can be recreated.
     }
     
-    //MARK: - XML Parsing Code
-    func beginParsing(urlString:String){
-        guard let myURL = NSURL(string:urlString) else {
-            print("URL not defined properly")
-            return
+    func refreshData() {
+        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni")
+        let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
+        let session = URLSession.shared
+        
+        session.dataTask(with: URLRequest) {data, URLResponse, err in
+            self.xmlParser = XMLParser(data: data!)
+            self.xmlParser.delegate = self
+            self.xmlParser.parse()
+            
+            // printing output for debugging
+            print (data)
+            print ("line number " + String(self.xmlParser.lineNumber))
+            print ("task completed")
+            
+        }.resume()
+    }
+    
+    private func parser(parser: XMLParser,
+                didStartElement elementName: String,
+                namespaceURI: String?,
+                qualifiedName: String?,
+                attributes attributeDict: [NSObject : AnyObject]){
+        print ("didStartElement")
+        if elementName == "body" {
+            weAreInsideAnItem = true
         }
-        guard let parser = XMLParser(contentsOf: myURL as URL) else {
-            print("Cannot Read Data")
-            return
+        print ("weAreInsideAnItem is " + String(weAreInsideAnItem))
+        if weAreInsideAnItem {
+            switch elementName {
+            case "error":
+                entryError = String()
+                currentParsedElement = "error"
+            case "vehicle":
+                entryVehicle = String()
+                currentParsedElement = "vehicle"
+            case "lastTime":
+                entryLastTime = String()
+                currentParsedElement = "lastTime"
+            default: break
+            }
         }
-        parser.delegate = self
-        if !parser.parse(){
-            print("Data Errors Exist:")
-            let error = parser.parserError!
-            print("Error Description:\(error.localizedDescription)")
-            print("Line number: \(parser.lineNumber)")
+    }
+    
+    func parser(_ parser: XMLParser, foundCharacters string: String) {
+        
+        //printing output for debugging
+        print ("running foundCharacters")
+        print (weAreInsideAnItem)
+        Elements.append(string)
+        print (string)
+        print ("String is " + String(string.characters.count) + " characters long")
+        print (String(Elements.count) + " elements parsed")
+        
+        if weAreInsideAnItem {
+            switch currentParsedElement {
+            case "error":
+                entryError = entryError! + string
+            case "vehicle":
+                entryVehicle = entryVehicle! + string
+            case "lastTime":
+                entryLastTime = entryLastTime! + string
+            default: break
+            }
         }
-        tableView.reloadData()
     }
 }
 
