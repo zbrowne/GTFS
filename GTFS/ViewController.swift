@@ -11,14 +11,7 @@ import UIKit
 class ViewController: UITableViewController, XMLParserDelegate {
     
     var xmlParser: XMLParser!
-    
-    var entryError: String?
-    var entryVehicle: String?
-    var entryLastTime: String?
-    
-    var currentParsedElement = String()
-    var weAreInsideAnItem = false
-    
+
     var Elements = [String]()
     
     override func viewDidLoad() {
@@ -26,7 +19,7 @@ class ViewController: UITableViewController, XMLParserDelegate {
         // Do any additional setup after loading the view, typically from a nib.
         refreshData()
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -42,61 +35,96 @@ class ViewController: UITableViewController, XMLParserDelegate {
             self.xmlParser.delegate = self
             self.xmlParser.parse()
             
-            // printing output for debugging
-            print (data)
             print ("line number " + String(self.xmlParser.lineNumber))
             print ("task completed")
             
-        }.resume()
+            }.resume()
     }
     
-    private func parser(parser: XMLParser,
+    func parser(_ parser: XMLParser,
                 didStartElement elementName: String,
                 namespaceURI: String?,
-                qualifiedName: String?,
-                attributes attributeDict: [NSObject : AnyObject]){
-        print ("didStartElement")
-        if elementName == "body" {
-            weAreInsideAnItem = true
+                qualifiedName qName: String?,
+                attributes attributeDict: [String : String] = [:]) {
+        print (elementName)
+        if elementName == "vehicle" {
+            if let id = attributeDict["id"] as String? {
+                print(id)
+            } else {
+                print ("vehicle has no id")
+            }
+            
+            if let routeTag = attributeDict["routeTag"] as String? {
+                print(routeTag)
+            } else {
+                print ("vehicle has no routeTag")
+            }
+            
+            if let dirTag = attributeDict["dirTag"] as String? {
+                print(dirTag)
+            } else {
+                print ("vehicle has no dirTag")
+            }
+            
+            if let lat = attributeDict["lat"] as String? {
+                print(lat)
+            } else {
+                print ("vehicle has no lat")
+            }
+            
+            if let lon = attributeDict["lon"] as String? {
+                print(lon)
+            } else {
+                print ("vehicle has no lon")
+            }
+            
+            if let secsSinceReport = attributeDict["secsSinceReport"] as String? {
+                print(secsSinceReport)
+            } else {
+                print ("vehicle has no secsSinceReport")
+            }
+            
+            if let predictable = attributeDict["predictable"] as String? {
+                print(predictable)
+            } else {
+                print ("vehicle has no predictable")
+            }
+            
+            if let heading = attributeDict["heading"] as String? {
+                print(heading)
+            } else {
+                print ("vehicle has no heading")
+            }
+            
+            if let speedKmHr = attributeDict["speedKmHr"] as String? {
+                print(speedKmHr)
+            } else {
+                print ("vehicle has no speedKmHr")
+            }
+            
+            if let leadingVehicleId = attributeDict["leadingVehicleId"] as String? {
+                print(leadingVehicleId)
+            } else {
+                print ("vehicle has no leadingVehicleId")
+            }
         }
-        print ("weAreInsideAnItem is " + String(weAreInsideAnItem))
-        if weAreInsideAnItem {
-            switch elementName {
-            case "error":
-                entryError = String()
-                currentParsedElement = "error"
-            case "vehicle":
-                entryVehicle = String()
-                currentParsedElement = "vehicle"
-            case "lastTime":
-                entryLastTime = String()
-                currentParsedElement = "lastTime"
-            default: break
+        
+        if elementName == "lastTime" {
+            if let time = attributeDict["time"] as String? {
+                print(time)
+            } else {
+                print ("time of latest information not available")
             }
         }
     }
     
     func parser(_ parser: XMLParser, foundCharacters string: String) {
-        
-        //printing output for debugging
-        print ("running foundCharacters")
-        print (weAreInsideAnItem)
-        Elements.append(string)
-        print (string)
-        print ("String is " + String(string.characters.count) + " characters long")
-        print (String(Elements.count) + " elements parsed")
-        
-        if weAreInsideAnItem {
-            switch currentParsedElement {
-            case "error":
-                entryError = entryError! + string
-            case "vehicle":
-                entryVehicle = entryVehicle! + string
-            case "lastTime":
-                entryLastTime = entryLastTime! + string
-            default: break
-            }
+        if string.characters.count > 1 {
+            print (string)
         }
+        Elements.append(string)
+        print (String(Elements.count) + " elements parsed")
+        print ("")
     }
 }
 
