@@ -28,7 +28,7 @@ class ViewController: UIViewController, XMLParserDelegate {
         let initialLocation = CLLocation(latitude: 37.7749, longitude: -122.4194)
         centerMapOnLocation(location: initialLocation)
         
-        // Do any additional setup after loading the view, typically from a nib.
+        // run the xml parser
         refreshData()
     }
     
@@ -160,6 +160,7 @@ class ViewController: UIViewController, XMLParserDelegate {
 
     extension ViewController: MKMapViewDelegate {
         
+        // adds pins to the map
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if let annotation = annotation as? Vehicle {
                 let identifier = "Vehicle"
@@ -179,6 +180,7 @@ class ViewController: UIViewController, XMLParserDelegate {
             return nil
         }
         
+        // adds information for the detailDisclosure ("info button")
         func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
             let vehicle = view.annotation as! Vehicle
             let routeTag = "Route " + vehicle.routeTag
