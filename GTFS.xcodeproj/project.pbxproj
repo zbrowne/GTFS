@@ -196,6 +196,7 @@
 				TargetAttributes = {
 					00CEA4B71D95EB5B00C5F290 = {
 						CreatedOnToolsVersion = 8.0;
+						DevelopmentTeam = K3XKQXL6WM;
 						ProvisioningStyle = Automatic;
 					};
 					00CEA4CB1D95EB5C00C5F290 = {
@@ -414,6 +415,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = K3XKQXL6WM;
 				INFOPLIST_FILE = GTFS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.zbrowne.GTFS;
@@ -426,6 +428,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = K3XKQXL6WM;
 				INFOPLIST_FILE = GTFS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.zbrowne.GTFS;

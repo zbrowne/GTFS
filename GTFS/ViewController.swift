@@ -9,16 +9,25 @@
 import UIKit
 import MapKit
 
-class ViewController: UITableViewController, XMLParserDelegate {
+class ViewController: UIViewController, XMLParserDelegate {
+    
+    @IBOutlet weak var mapView: MKMapView!
     
     var xmlParser: XMLParser!
     
     var vehicles = [Vehicle]()
     var elements = [String]()
     var lastUpdated = String()
+    let regionRadius: CLLocationDistance = 20000
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        mapView.delegate = self
+        
+        // set initial location for map view
+        let initialLocation = CLLocation(latitude: 37.7749, longitude: -122.4194)
+        centerMapOnLocation(location: initialLocation)
+        
         // Do any additional setup after loading the view, typically from a nib.
         refreshData()
     }
@@ -44,6 +53,8 @@ class ViewController: UITableViewController, XMLParserDelegate {
             NSLog ("task completed")
             }.resume()
     }
+
+// parser delegates
     
     // uses vehicle element attributes to create a vehicle object and saves object to an array of vehicles
     func parser(_ parser: XMLParser,
@@ -105,9 +116,10 @@ class ViewController: UITableViewController, XMLParserDelegate {
                 leadingVehicleId = attributeLeadingVehicleId
             }
         
-        let vehicle = Vehicle(id: id, routeTag: routeTag, dirTag: dirTag, lat: lat, lon: lon, secsSinceReport: secsSinceReport, predictable: predictable, heading: heading, speedKmHr: speedKmHr, leadingVehicleId: leadingVehicleId)
+        let vehicle = Vehicle(title: id, routeTag: routeTag, dirTag: dirTag, lat: lat, lon: lon, secsSinceReport: secsSinceReport, predictable: predictable, heading: heading, speedKmHr: speedKmHr, leadingVehicleId: leadingVehicleId)
 
         vehicles.append(vehicle)
+        mapView.addAnnotation(vehicle)
         }
         
         if elementName == "lastTime" {
@@ -125,6 +137,8 @@ class ViewController: UITableViewController, XMLParserDelegate {
         elements.append(string)
     }
     
+// helper methods
+
     // function for printing formatted timestamp string for default timezone on device
     func convertToDeviceTime(timestamp: Double) -> String {
         let date = NSDate(timeIntervalSince1970: timestamp)
@@ -133,6 +147,47 @@ class ViewController: UITableViewController, XMLParserDelegate {
         let formattedTimestamp = dateFormatter.string(from: date as Date)
         return formattedTimestamp
     }
+    
+    // function for centering location on map
+    func centerMapOnLocation(location: CLLocation) {
+        let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate,
+                                                                  regionRadius * 2.0, regionRadius * 2.0)
+        mapView.setRegion(coordinateRegion, animated: true)
+    }
 }
+
+// extention for mapview delegates
+
+    extension ViewController: MKMapViewDelegate {
+        
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            if let annotation = annotation as? Vehicle {
+                let identifier = "Vehicle"
+                var view: MKPinAnnotationView
+                if let dequeuedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+                    as? MKPinAnnotationView {
+                    dequeuedView.annotation = annotation
+                    view = dequeuedView
+                } else {
+                    view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                    view.canShowCallout = true
+                    view.calloutOffset = CGPoint(x: -5, y: 5)
+                    view.rightCalloutAccessoryView = UIButton(type: UIButtonType.detailDisclosure) as UIView
+                }
+                return view
+            }
+            return nil
+        }
+        
+        func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+            let vehicle = view.annotation as! Vehicle
+            let routeTag = "Route " + vehicle.routeTag
+            let secsSinceReport = "Last updated " + String(vehicle.secsSinceReport) + " seconds ago"
+            
+            let ac = UIAlertController(title: routeTag, message: secsSinceReport, preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+        }
+    }
 
 

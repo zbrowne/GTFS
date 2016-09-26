@@ -37,32 +37,32 @@ speedKmHr (double) – Specifies GPS based speed of vehicle.
 import Foundation
 import MapKit
 
-struct Vehicle {
-    var id: String?
-    var routeTag: String?
+class Vehicle: NSObject, MKAnnotation {
+    var title: String?
+    var routeTag: String
     var dirTag: String?
-    var coord: CLLocationCoordinate2D?
-    var secsSinceReport: Int?
-    var predictable: Bool?
-    var heading: Int?
-    var speedKmHr: Double?
+    var coordinate: CLLocationCoordinate2D
+    var secsSinceReport: Int
+    var predictable: Bool
+    var heading: Int
+    var speedKmHr: Double
     var leadingVehicleId: String?
     
-    init(id: String?,
-         routeTag: String?,
+    init(title: String?,
+         routeTag: String,
          dirTag: String?,
-         lat: CLLocationDegrees?,
-         lon: CLLocationDegrees?,
-         secsSinceReport: Int?,
-         predictable: Bool?,
-         heading: Int?,
-         speedKmHr: Double?,
+         lat: CLLocationDegrees,
+         lon: CLLocationDegrees,
+         secsSinceReport: Int,
+         predictable: Bool,
+         heading: Int,
+         speedKmHr: Double,
          leadingVehicleId: String?) {
         
-        self.id = id
+        self.title = title
         self.routeTag = routeTag
         self.dirTag = dirTag
-        self.coord = CLLocationCoordinate2D(latitude: lat!, longitude: lon!)
+        self.coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         self.secsSinceReport = secsSinceReport
         self.predictable = predictable
         self.heading = heading
@@ -71,6 +71,6 @@ struct Vehicle {
     }
     
     var location: CLLocation? {
-        return CLLocation(latitude: (coord?.latitude)!, longitude: (coord?.longitude)!)
+        return CLLocation(latitude: (coordinate.latitude), longitude: (coordinate.longitude))
     } 
 }
