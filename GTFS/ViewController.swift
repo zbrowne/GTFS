@@ -7,12 +7,11 @@
 //
 
 import UIKit
-import MapKit
+import Mapbox
 
 class ViewController: UIViewController, XMLParserDelegate {
     
-    @IBOutlet weak var mapView: MKMapView!
-    
+    @IBOutlet var mapView: MGLMapView!
     var xmlParser: XMLParser!
     
     var vehicles = [Vehicle]()
@@ -22,11 +21,6 @@ class ViewController: UIViewController, XMLParserDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        mapView.delegate = self
-        
-        // set initial location for map view
-        let initialLocation = CLLocation(latitude: 37.7749, longitude: -122.4194)
-        centerMapOnLocation(location: initialLocation)
         
         // run the xml parser
         refreshData()
@@ -39,7 +33,7 @@ class ViewController: UIViewController, XMLParserDelegate {
     
     // reads nextbus xml data and starts the xml parser delegate methods
     func refreshData() {
-        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni")
+        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=reno")
         let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
         let session = URLSession.shared
         
@@ -125,7 +119,7 @@ class ViewController: UIViewController, XMLParserDelegate {
         elements.append(string)
     }
     
-    // helper methods
+// helper methods
     
     // function for printing formatted timestamp string for default timezone on device
     func convertToDeviceTime(timestamp: Double) -> String {
@@ -136,43 +130,41 @@ class ViewController: UIViewController, XMLParserDelegate {
         return formattedTimestamp
     }
     
-    // function for centering location on map
-    func centerMapOnLocation(location: CLLocation) {
-        let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate,
-                                                                  regionRadius * 2.0, regionRadius * 2.0)
-        mapView.setRegion(coordinateRegion, animated: true)
+    // zooms to user's current location
+    func zoomToCurrentLocation(location: CLLocation) {
+        let center = CLLocationCoordinate2DMake(location.coordinate.latitude, location.coordinate.longitude)
+        mapView.setCenter(center, zoomLevel: 15, animated: true)
+    }
+    
+    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let userLoction: CLLocation = locations[0]
+        let latitude = userLoction.coordinate.latitude
+        let longitude = userLoction.coordinate.longitude
     }
 }
 
 // extention for mapview delegates
 
-extension ViewController: MKMapViewDelegate {
+extension ViewController: MGLMapViewDelegate {
     
-    // adds pins to the map
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        if let annotation = annotation as? Vehicle {
-            let identifier = "Vehicle"
-            var view: MKPinAnnotationView
-            if let dequeuedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-                as? MKPinAnnotationView {
-                dequeuedView.annotation = annotation
-                view = dequeuedView
-            } else {
-                view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-                view.canShowCallout = true
-                view.calloutOffset = CGPoint(x: -5, y: 5)
-                view.rightCalloutAccessoryView = UIButton(type: UIButtonType.detailDisclosure) as UIView
-            }
-            return view
-        }
-        return nil
+    // Allow callout view to appear when an annotation is tapped.
+    func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
+        return true
+    }
+    
+    func mapView(_ mapView: MGLMapView, rightCalloutAccessoryViewFor annotation: MGLAnnotation) -> UIView? {
+        return UIButton(type: .detailDisclosure)
     }
     
     // adds information for the detailDisclosure ("info button")
-    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-        let vehicle = view.annotation as! Vehicle
+    func mapView(_ mapView: MGLMapView, annotation: Vehicle, calloutAccessoryControlTapped control: UIControl) {
+        
+        let vehicle = annotation
         let routeTag = "Route " + vehicle.routeTag
         let secsSinceReport = "Last updated " + String(vehicle.secsSinceReport) + " seconds ago"
+        
+        // Hide the callout view.
+        mapView.deselectAnnotation(annotation, animated: false)
         
         let ac = UIAlertController(title: routeTag, message: secsSinceReport, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "OK", style: .default))

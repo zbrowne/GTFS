@@ -35,9 +35,9 @@ speedKmHr (double) – Specifies GPS based speed of vehicle.
  */
 
 import Foundation
-import MapKit
+import Mapbox
 
-class Vehicle: NSObject, MKAnnotation {
+class Vehicle: NSObject, MGLAnnotation {
     var title: String?
     var routeTag: String
     var dirTag: String?
