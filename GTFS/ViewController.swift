@@ -53,8 +53,8 @@ class ViewController: UIViewController, XMLParserDelegate {
             NSLog ("task completed")
             }.resume()
     }
-
-// parser delegates
+    
+    // parser delegates
     
     // uses vehicle element attributes to create a vehicle object and saves object to an array of vehicles
     func parser(_ parser: XMLParser,
@@ -64,28 +64,17 @@ class ViewController: UIViewController, XMLParserDelegate {
                 attributes attributeDict: [String : String] = [:]) {
         
         if elementName == "vehicle" {
-            
-            var id = String()
-            var routeTag = String()
-            var dirTag = String()
             var lat = CLLocationDegrees()
             var lon = CLLocationDegrees()
             var secsSinceReport = Int()
             var predictable = Bool()
             var heading = Int()
             var speedKmHr = Double()
-            var leadingVehicleId = String()
             
-            if let attributeId = attributeDict["id"] as String? {
-                id = attributeId
-            }
-            
-            if let attributeRouteTag = attributeDict["routeTag"] as String? {
-                routeTag = attributeRouteTag
-            }
-            
-            if let attributeDirTag = attributeDict["dirTag"] as String? {
-                dirTag = attributeDirTag
+            guard
+                let id = attributeDict["id"] as String?,
+                let routeTag = attributeDict["routeTag"] as String? else {
+                return
             }
             
             if let attributeLat = attributeDict["lat"] as String? {
@@ -112,14 +101,13 @@ class ViewController: UIViewController, XMLParserDelegate {
                 speedKmHr = Double(attributeSpeedKmHr)!
             }
             
-            if let attributeLeadingVehicleId = attributeDict["leadingVehicleId"] as String? {
-                leadingVehicleId = attributeLeadingVehicleId
-            }
-        
-        let vehicle = Vehicle(title: id, routeTag: routeTag, dirTag: dirTag, lat: lat, lon: lon, secsSinceReport: secsSinceReport, predictable: predictable, heading: heading, speedKmHr: speedKmHr, leadingVehicleId: leadingVehicleId)
-
-        vehicles.append(vehicle)
-        mapView.addAnnotation(vehicle)
+            let dirTag = attributeDict["dirTag"] as String? ?? ""
+            let leadingVehicleId = attributeDict["leadingVehicleId"] as String? ?? ""
+            
+            let vehicle = Vehicle(title: id, routeTag: routeTag, dirTag: dirTag, lat: lat, lon: lon, secsSinceReport: secsSinceReport, predictable: predictable, heading: heading, speedKmHr: speedKmHr, leadingVehicleId: leadingVehicleId)
+            
+            vehicles.append(vehicle)
+            mapView.addAnnotation(vehicle)
         }
         
         if elementName == "lastTime" {
@@ -137,8 +125,8 @@ class ViewController: UIViewController, XMLParserDelegate {
         elements.append(string)
     }
     
-// helper methods
-
+    // helper methods
+    
     // function for printing formatted timestamp string for default timezone on device
     func convertToDeviceTime(timestamp: Double) -> String {
         let date = NSDate(timeIntervalSince1970: timestamp)
@@ -158,38 +146,38 @@ class ViewController: UIViewController, XMLParserDelegate {
 
 // extention for mapview delegates
 
-    extension ViewController: MKMapViewDelegate {
-        
-        // adds pins to the map
-        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-            if let annotation = annotation as? Vehicle {
-                let identifier = "Vehicle"
-                var view: MKPinAnnotationView
-                if let dequeuedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-                    as? MKPinAnnotationView {
-                    dequeuedView.annotation = annotation
-                    view = dequeuedView
-                } else {
-                    view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-                    view.canShowCallout = true
-                    view.calloutOffset = CGPoint(x: -5, y: 5)
-                    view.rightCalloutAccessoryView = UIButton(type: UIButtonType.detailDisclosure) as UIView
-                }
-                return view
+extension ViewController: MKMapViewDelegate {
+    
+    // adds pins to the map
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        if let annotation = annotation as? Vehicle {
+            let identifier = "Vehicle"
+            var view: MKPinAnnotationView
+            if let dequeuedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+                as? MKPinAnnotationView {
+                dequeuedView.annotation = annotation
+                view = dequeuedView
+            } else {
+                view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                view.canShowCallout = true
+                view.calloutOffset = CGPoint(x: -5, y: 5)
+                view.rightCalloutAccessoryView = UIButton(type: UIButtonType.detailDisclosure) as UIView
             }
-            return nil
+            return view
         }
-        
-        // adds information for the detailDisclosure ("info button")
-        func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-            let vehicle = view.annotation as! Vehicle
-            let routeTag = "Route " + vehicle.routeTag
-            let secsSinceReport = "Last updated " + String(vehicle.secsSinceReport) + " seconds ago"
-            
-            let ac = UIAlertController(title: routeTag, message: secsSinceReport, preferredStyle: .alert)
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            present(ac, animated: true)
-        }
+        return nil
     }
+    
+    // adds information for the detailDisclosure ("info button")
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+        let vehicle = view.annotation as! Vehicle
+        let routeTag = "Route " + vehicle.routeTag
+        let secsSinceReport = "Last updated " + String(vehicle.secsSinceReport) + " seconds ago"
+        
+        let ac = UIAlertController(title: routeTag, message: secsSinceReport, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+}
 
 
