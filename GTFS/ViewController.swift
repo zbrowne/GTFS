@@ -23,159 +23,187 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Requests user's location once to trigger locationManager function that zooms to user's current location
         locationManager.delegate = self;
         locationManager.requestLocation()
         
-            // run the xml parser
-            refreshData()
-        }
-        
-        override func didReceiveMemoryWarning() {
-            super.didReceiveMemoryWarning()
-            // Dispose of any resources that can be recreated.
-        }
+        // run the xml parser
+        let timer = Timer.scheduledTimer(timeInterval: 5.0, target: self, selector: #selector(self.refreshData), userInfo: nil, repeats: true)
+        timer.fire()
+    }
     
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
+    
+    // zooms to user's current location
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let userLocation = locations.last
-        zoomToCurrentLocation(location: userLocation!)
+        if let userLocation = locations.last {
+            let center = CLLocationCoordinate2DMake(userLocation.coordinate.latitude, userLocation.coordinate.longitude)
+            mapView.setCenter(center, zoomLevel: 15, animated: true)
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
     }
     
-        // reads nextbus xml data and starts the xml parser delegate methods
-        func refreshData() {
-            let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni")
-            let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
-            let session = URLSession.shared
-            
-            session.dataTask(with: URLRequest) {data, URLResponse, err in
-                self.xmlParser = XMLParser(data: data!)
-                self.xmlParser.delegate = self
-                self.xmlParser.parse()
-                print (String(self.elements.count) + " elements parsed")
-                print (String(self.vehicles.count) + " vehicle locations obtained")
-                print ("last updated at " + (self.lastUpdated))
-                NSLog ("task completed")
-                }.resume()
-        }
+    // reads nextbus xml data and starts the xml parser delegate methods
+    // TODO - Make addVehiclesToMap work!!!!!!!!!!
+    
+    func refreshData() {
+        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni")
+        let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
+        let session = URLSession.shared
         
-        // parser delegates
+        session.dataTask(with: URLRequest) {data, URLResponse, err in
+            self.xmlParser = XMLParser(data: data!)
+            self.xmlParser.delegate = self
+            self.xmlParser.parse()
+            print (String(self.elements.count) + " elements parsed")
+            print (String(self.vehicles.count) + " vehicle locations obtained")
+            print ("last updated at " + (self.lastUpdated))
+            // self.addVehiclesToMap()
+            self.vehicles.removeAll()
+            self.elements.removeAll()
+            NSLog ("task completed")
+            }.resume()
+    }
+    
+    // parser delegates
+    
+    // uses vehicle element attributes to create a vehicle object and saves object to an array of vehicles
+    func parser(_ parser: XMLParser,
+                didStartElement elementName: String,
+                namespaceURI: String?,
+                qualifiedName qName: String?,
+                attributes attributeDict: [String : String] = [:]) {
         
-        // uses vehicle element attributes to create a vehicle object and saves object to an array of vehicles
-        func parser(_ parser: XMLParser,
-                    didStartElement elementName: String,
-                    namespaceURI: String?,
-                    qualifiedName qName: String?,
-                    attributes attributeDict: [String : String] = [:]) {
+        if elementName == "vehicle" {
+            var lat = CLLocationDegrees()
+            var lon = CLLocationDegrees()
+            var secsSinceReport = Int()
+            var predictable = Bool()
+            var heading = Int()
+            var speedKmHr = Double()
             
-            if elementName == "vehicle" {
-                var lat = CLLocationDegrees()
-                var lon = CLLocationDegrees()
-                var secsSinceReport = Int()
-                var predictable = Bool()
-                var heading = Int()
-                var speedKmHr = Double()
-                
-                guard
-                    let id = attributeDict["id"] as String?,
-                    let routeTag = attributeDict["routeTag"] as String? else {
-                        return
-                }
-                
-                if let attributeLat = attributeDict["lat"] as String? {
-                    lat = CLLocationDegrees(attributeLat)!
-                }
-                
-                if let attributeLon = attributeDict["lon"] as String? {
-                    lon = CLLocationDegrees(attributeLon)!
-                }
-                
-                if let attributeSecsSinceReport = attributeDict["secsSinceReport"] as String? {
-                    secsSinceReport = Int(attributeSecsSinceReport)!
-                }
-                
-                if let attributePredictable = attributeDict["predictable"] as String? {
-                    predictable = Bool(attributePredictable)!
-                }
-                
-                if let attributeHeading = attributeDict["heading"] as String? {
-                    heading = Int(attributeHeading)!
-                }
-                
-                if let attributeSpeedKmHr = attributeDict["speedKmHr"] as String? {
-                    speedKmHr = Double(attributeSpeedKmHr)!
-                }
-                
-                let dirTag = attributeDict["dirTag"] as String? ?? ""
-                let leadingVehicleId = attributeDict["leadingVehicleId"] as String? ?? ""
-                
-                let vehicle = Vehicle(title: id, routeTag: routeTag, dirTag: dirTag, lat: lat, lon: lon, secsSinceReport: secsSinceReport, predictable: predictable, heading: heading, speedKmHr: speedKmHr, leadingVehicleId: leadingVehicleId)
-                
-                vehicles.append(vehicle)
-                mapView.addAnnotation(vehicle)
+            guard
+                let id = attributeDict["id"] as String?,
+                let routeTag = attributeDict["routeTag"] as String? else {
+                    return
             }
             
-            if elementName == "lastTime" {
-                if let attributeTime = attributeDict["time"] as String? {
-                    let unixTime = (Double(attributeTime)!/1000.0)
-                    lastUpdated = convertToDeviceTime(timestamp: unixTime)
-                } else {
-                    print ("time of last update not available")
-                }
+            if let attributeLat = attributeDict["lat"] as String? {
+                lat = CLLocationDegrees(attributeLat)!
             }
+            
+            if let attributeLon = attributeDict["lon"] as String? {
+                lon = CLLocationDegrees(attributeLon)!
+            }
+            
+            if let attributeSecsSinceReport = attributeDict["secsSinceReport"] as String? {
+                secsSinceReport = Int(attributeSecsSinceReport)!
+            }
+            
+            if let attributePredictable = attributeDict["predictable"] as String? {
+                predictable = Bool(attributePredictable)!
+            }
+            
+            if let attributeHeading = attributeDict["heading"] as String? {
+                heading = Int(attributeHeading)!
+            }
+            
+            if let attributeSpeedKmHr = attributeDict["speedKmHr"] as String? {
+                speedKmHr = Double(attributeSpeedKmHr)!
+            }
+            
+            let dirTag = attributeDict["dirTag"] as String? ?? ""
+            let leadingVehicleId = attributeDict["leadingVehicleId"] as String? ?? ""
+            
+            let vehicle = Vehicle(title: id, routeTag: routeTag, dirTag: dirTag, lat: lat, lon: lon, secsSinceReport: secsSinceReport, predictable: predictable, heading: heading, speedKmHr: speedKmHr, leadingVehicleId: leadingVehicleId)
+            
+            vehicles.append(vehicle)
         }
         
-        // parses each element and appends it to an array of elements
-        func parser(_ parser: XMLParser, foundCharacters string: String) {
-            elements.append(string)
-        }
-        
-    // helper methods
-        
-        // function for printing formatted timestamp string for default timezone on device
-        func convertToDeviceTime(timestamp: Double) -> String {
-            let date = NSDate(timeIntervalSince1970: timestamp)
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "h:mma M-dd-yyyy"
-            let formattedTimestamp = dateFormatter.string(from: date as Date)
-            return formattedTimestamp
-        }
-        
-        //zooms to user's current location
-        func zoomToCurrentLocation(location: CLLocation) {
-            let center = CLLocationCoordinate2DMake(location.coordinate.latitude, location.coordinate.longitude)
-            mapView.setCenter(center, zoomLevel: 15, animated: true)
+        if elementName == "lastTime" {
+            if let attributeTime = attributeDict["time"] as String? {
+                let unixTime = (Double(attributeTime)!/1000.0)
+                lastUpdated = convertToDeviceTime(timestamp: unixTime)
+            } else {
+                print ("time of last update not available")
+            }
         }
     }
     
-    // extention for mapview delegates
+    // parses each element and appends it to an array of elements
+    func parser(_ parser: XMLParser, foundCharacters string: String) {
+        elements.append(string)
+    }
     
-    extension ViewController: MGLMapViewDelegate {
-        
-        // Allow callout view to appear when an annotation is tapped.
-        func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
-            return true
+    // helper methods
+    
+    // function for printing formatted timestamp string for default timezone on device
+    func convertToDeviceTime(timestamp: Double) -> String {
+        let date = NSDate(timeIntervalSince1970: timestamp)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "h:mma M-dd-yyyy"
+        let formattedTimestamp = dateFormatter.string(from: date as Date)
+        return formattedTimestamp
+    }
+    
+    // mapping functions
+    
+    func addVehiclesToMap() {
+        for vehicle in vehicles {
+            mapView.addAnnotation(vehicle)
         }
+    }
+    
+    
+}
+
+// extention for mapview delegates
+
+extension ViewController: MGLMapViewDelegate {
+    
+    func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
         
-        func mapView(_ mapView: MGLMapView, rightCalloutAccessoryViewFor annotation: MGLAnnotation) -> UIView? {
-            return UIButton(type: .detailDisclosure)
-        }
+        // Use the annotation’s longitude value (as a string) as the reuse identifier for its view.
+        let reuseIdentifier = "\(annotation.coordinate.longitude)"
         
-        // adds information for the detailDisclosure ("info button")
-        func mapView(_ mapView: MGLMapView, annotation: Vehicle, calloutAccessoryControlTapped control: UIControl) {
-            
-            let vehicle = annotation
-            let routeTag = "Route " + vehicle.routeTag
-            let secsSinceReport = "Last updated " + String(vehicle.secsSinceReport) + " seconds ago"
-            
-            // Hide the callout view.
-            mapView.deselectAnnotation(annotation, animated: false)
-            
-            let ac = UIAlertController(title: routeTag, message: secsSinceReport, preferredStyle: .alert)
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            present(ac, animated: true)
+        // For better performance, always try to reuse existing annotations.
+        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
+        
+        // If there’s no reusable annotation view available, initialize a new one.
+        if annotationView == nil {
+            annotationView = MGLAnnotationView(reuseIdentifier: reuseIdentifier)
         }
+        return annotationView
+    }
+    
+    // Allow callout view to appear when an annotation is tapped.
+    func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
+        return true
+    }
+    
+    func mapView(_ mapView: MGLMapView, rightCalloutAccessoryViewFor annotation: MGLAnnotation) -> UIView? {
+        return UIButton(type: .detailDisclosure)
+    }
+    
+    // adds information for the detailDisclosure ("info button")
+    func mapView(_ mapView: MGLMapView, annotation: Vehicle, calloutAccessoryControlTapped control: UIControl) {
+        
+        let vehicle = annotation
+        let routeTag = "Route " + vehicle.routeTag
+        let secsSinceReport = "Last updated " + String(vehicle.secsSinceReport) + " seconds ago"
+        
+        // Hide the callout view.
+        mapView.deselectAnnotation(annotation, animated: false)
+        
+        let ac = UIAlertController(title: routeTag, message: secsSinceReport, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
 }
 
 
