@@ -15,7 +15,6 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     var xmlParser: XMLParser!
     let locationManager = CLLocationManager()
     
-    var currentVehicles = [String: Vehicle]()
     var updatedVehicles = [String: Vehicle]()
     var elements = [String]()
     var lastUpdated = String()
@@ -64,15 +63,13 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
             self.xmlParser.parse()
             print (String(self.elements.count) + " elements parsed")
             print (String(self.updatedVehicles.count) + " vehicle locations obtained")
-            print (String(self.currentVehicles.count) + " vehicles in the current vehicle list")
             print ("last updated at " + (self.lastUpdated))
-            let cv = self.currentVehicles
+            let uv = self.updatedVehicles
             DispatchQueue.main.async {
                 print ("adding vehicles to map on main...")
-                self.addVehiclesToMap(v: Array(cv.values))
+                self.addVehiclesToMap(v: Array(uv.values))
                 print ("... done adding vehicles to map on main")
             }
-            self.updatedVehicles.removeAll()
             self.elements.removeAll()
             NSLog ("task completed")
             }.resume()
@@ -131,7 +128,6 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
             let vehicle = Vehicle(title: id, routeTag: routeTag, dirTag: dirTag, lat: lat, lon: lon, secsSinceReport: secsSinceReport, predictable: predictable, heading: heading, speedKmHr: speedKmHr, leadingVehicleId: leadingVehicleId)
             
             updatedVehicles[id] = vehicle
-            updateCurrentVehicles()
         }
         
         if elementName == "lastTime" {
@@ -140,38 +136,6 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
                 lastUpdated = convertToDeviceTime(timestamp: unixTime)
             } else {
                 print ("time of last update not available")
-            }
-        }
-    }
-    
-    // currently not doing anything!!! 
-    func updateCurrentVehicles() {
-        // iterate through the most recent GTFS vehicle feed, update previous vehicle info and add new vehicles if they don't exist
-        for updatedid in updatedVehicles.keys {
-            for currentid in currentVehicles.keys {
-                if updatedid == currentid {
-                    // if updated id matches a current id, set the current id's value to that of the updated id
-                    currentVehicles[currentid] = updatedVehicles[updatedid]
-                }
-                else {
-                    // if updated id matches none of the current id's, add it to the current id dictionary
-                    currentVehicles[updatedid] = updatedVehicles[updatedid]
-                    print ("vehicle added to current vehicle list")
-                }
-            }
-        }
-        // iterate through the current vehicle list and remove any vehicles that are not present in the most recent GTFS feed
-        for currentid in currentVehicles.keys {
-            for updatedid in updatedVehicles.keys {
-                if currentid == updatedid {
-                    // break out and move to the next current id
-                    break
-                }
-                else {
-                    // if current id matches none of the updated id's, remove it from the dictionary
-                    currentVehicles[currentid] = nil
-                    print ("vehicle removed from current vehicle list")
-                }
             }
         }
     }
@@ -196,7 +160,9 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     
     func addVehiclesToMap(v: [Vehicle]) {
         for vehicle in v {
-            mapView.addAnnotation(vehicle)
+            if vehicle.secsSinceReport < 120 {
+                mapView.addAnnotation(vehicle)
+            }
         }
     }
 }
@@ -205,20 +171,20 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
 
 extension ViewController: MGLMapViewDelegate {
     
-/*    func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
+    func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
         
         // we only want vehicle annotations
         guard annotation is Vehicle else {
             return nil
         }
         
-        let reuseIdentifier = "\(annotation.coordinate.longitude)"
+        let reuseIdentifier = "\(annotation.title)"
 
         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
         
         if annotationView == nil {
             annotationView = CustomAnnotationView(reuseIdentifier: reuseIdentifier)
-            annotationView!.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+            annotationView!.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
             
             // Set the annotation view’s background color to a value determined by its longitude.
             let hue = CGFloat(annotation.coordinate.longitude) / 100
@@ -226,7 +192,7 @@ extension ViewController: MGLMapViewDelegate {
         }
         
         return annotationView
-    } */
+    }
 
     // Allow callout view to appear when an annotation is tapped.
     func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
