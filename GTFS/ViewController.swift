@@ -15,7 +15,8 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     var xmlParser: XMLParser!
     let locationManager = CLLocationManager()
     
-    var updatedVehicles = [String: Vehicle]()
+    var updatedVehicles = [Vehicle]()
+    var oldVehicles = [Vehicle]()
     var elements = [String]()
     var lastUpdated = String()
     let regionRadius: CLLocationDistance = 20000
@@ -23,13 +24,17 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        self.mapView.styleURL = MGLStyle.lightStyleURL(withVersion: 9)
+        
         // Requests user's location once to trigger locationManager function that zooms to user's current location
         locationManager.delegate = self;
         locationManager.requestLocation()
+        locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
         
         // run the xml parser
         let timer = Timer.scheduledTimer(timeInterval: 5.0, target: self, selector: #selector(self.refreshData), userInfo: nil, repeats: true)
         timer.fire()
+        self.addVehiclesToMap(v: updatedVehicles)
     }
     
     override func didReceiveMemoryWarning() {
@@ -40,7 +45,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     // zooms to user's current location
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         print("did update location")
-        if let userLocation = locations.last {
+        if let userLocation = locations.first {
             let center = CLLocationCoordinate2DMake(userLocation.coordinate.latitude, userLocation.coordinate.longitude)
             mapView.setCenter(center, zoomLevel: 15, animated: true)
             print("setting center")
@@ -58,16 +63,19 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
         let session = URLSession.shared
         
         session.dataTask(with: URLRequest) {data, URLResponse, err in
+            let oldVehicles = self.updatedVehicles
+            self.updatedVehicles.removeAll()
             self.xmlParser = XMLParser(data: data!)
             self.xmlParser.delegate = self
             self.xmlParser.parse()
             print (String(self.elements.count) + " elements parsed")
             print (String(self.updatedVehicles.count) + " vehicle locations obtained")
             print ("last updated at " + (self.lastUpdated))
-            let uv = self.updatedVehicles
+            let v = self.updatedVehicles
             DispatchQueue.main.async {
+                self.mapView.removeAnnotations(oldVehicles)
                 print ("adding vehicles to map on main...")
-                self.addVehiclesToMap(v: Array(uv.values))
+                self.addVehiclesToMap(v: v)
                 print ("... done adding vehicles to map on main")
             }
             self.elements.removeAll()
@@ -126,8 +134,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
             let leadingVehicleId = attributeDict["leadingVehicleId"] as String? ?? ""
             
             let vehicle = Vehicle(title: id, routeTag: routeTag, dirTag: dirTag, lat: lat, lon: lon, secsSinceReport: secsSinceReport, predictable: predictable, heading: heading, speedKmHr: speedKmHr, leadingVehicleId: leadingVehicleId)
-            
-            updatedVehicles[id] = vehicle
+            updatedVehicles.append(vehicle)
         }
         
         if elementName == "lastTime" {
@@ -174,26 +181,19 @@ extension ViewController: MGLMapViewDelegate {
     func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
         
         // we only want vehicle annotations
-        guard annotation is Vehicle else {
+        guard let vehicle = annotation as? Vehicle else {
             return nil
         }
         
-        let reuseIdentifier = "\(annotation.title)"
-
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
+        let reuseIdentifier = "\(vehicle.title)"
+        let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
         
         if annotationView == nil {
-            annotationView = CustomAnnotationView(reuseIdentifier: reuseIdentifier)
-            annotationView!.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
-            
-            // Set the annotation view’s background color to a value determined by its longitude.
-            let hue = CGFloat(annotation.coordinate.longitude) / 100
-            annotationView!.backgroundColor = UIColor(hue: hue, saturation: 0.5, brightness: 1, alpha: 1)
         }
         
         return annotationView
     }
-
+    
     // Allow callout view to appear when an annotation is tapped.
     func mapView(_ mapView: MGLMapView, annotationCanShowCallout annotation: MGLAnnotation) -> Bool {
         return true
@@ -216,20 +216,6 @@ extension ViewController: MGLMapViewDelegate {
         let ac = UIAlertController(title: routeTag, message: secsSinceReport, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
-    }
-}
-
-class CustomAnnotationView: MGLAnnotationView {
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        // Force the annotation view to maintain a constant size when the map is tilted.
-        scalesWithViewingDistance = false
-        
-        // Use CALayer’s corner radius to turn this view into a circle.
-        layer.cornerRadius = frame.width / 2
-        layer.borderWidth = 2
-        layer.borderColor = UIColor.white.cgColor
     }
 }
 

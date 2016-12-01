@@ -41,7 +41,7 @@ class Vehicle: NSObject, MGLAnnotation {
     var title: String?
     var routeTag: String
     var dirTag: String?
-    var coordinate: CLLocationCoordinate2D
+    dynamic var coordinate: CLLocationCoordinate2D
     var secsSinceReport: Int
     var predictable: Bool
     var heading: Int
