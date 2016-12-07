@@ -178,20 +178,28 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
 
 extension ViewController: MGLMapViewDelegate {
     
-    func mapView(_ mapView: MGLMapView, viewFor annotation: MGLAnnotation) -> MGLAnnotationView? {
+    func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
         
         // we only want vehicle annotations
-        guard let vehicle = annotation as? Vehicle else {
+         guard let vehicle = annotation as? Vehicle else {
             return nil
-        }
-        
+         }
         let reuseIdentifier = "\(vehicle.title)"
-        let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
+        var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: reuseIdentifier)
         
-        if annotationView == nil {
+        if annotationImage == nil {
+            if let image = UIImage(named: "chevron-circle-up.png") {
+                let size = CGSize(width: 20, height: 20)
+                UIGraphicsBeginImageContext(size)
+                let rect = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+                image.draw(in: rect)
+                if let resizedImage = UIGraphicsGetImageFromCurrentImageContext() {
+                    annotationImage = MGLAnnotationImage(image: resizedImage, reuseIdentifier: "\(vehicle.title)")
+                }
+            }
         }
         
-        return annotationView
+        return annotationImage
     }
     
     // Allow callout view to appear when an annotation is tapped.

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		009579821DBD42D600B423A0 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00A3DE991DB5AD05004CDF78 /* Mapbox.framework */; };
 		009579831DBD42D600B423A0 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 00A3DE991DB5AD05004CDF78 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		00BE358D1DF682C7006721EE /* chevron-circle-up.png in Resources */ = {isa = PBXBuildFile; fileRef = 00BE358C1DF682C7006721EE /* chevron-circle-up.png */; };
 		00CB2F671D98852A00B7E6B7 /* Vehicle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CB2F661D98852A00B7E6B7 /* Vehicle.swift */; };
 		00CEA4BC1D95EB5C00C5F290 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CEA4BB1D95EB5C00C5F290 /* AppDelegate.swift */; };
 		00CEA4BE1D95EB5C00C5F290 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CEA4BD1D95EB5C00C5F290 /* ViewController.swift */; };
@@ -52,6 +53,7 @@
 
 /* Begin PBXFileReference section */
 		00A3DE991DB5AD05004CDF78 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Mapbox.framework; sourceTree = "<group>"; };
+		00BE358C1DF682C7006721EE /* chevron-circle-up.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "chevron-circle-up.png"; sourceTree = "<group>"; };
 		00CB2F661D98852A00B7E6B7 /* Vehicle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Vehicle.swift; path = ../Vehicle.swift; sourceTree = "<group>"; };
 		00CEA4B81D95EB5B00C5F290 /* GTFS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GTFS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		00CEA4BB1D95EB5C00C5F290 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -94,11 +96,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		00BE358A1DF67FEF006721EE /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				00BE358B1DF6800D006721EE /* Images */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		00BE358B1DF6800D006721EE /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				00BE358C1DF682C7006721EE /* chevron-circle-up.png */,
+			);
+			name = Images;
+			sourceTree = "<group>";
+		};
 		00CEA4AF1D95EB5B00C5F290 = {
 			isa = PBXGroup;
 			children = (
 				00A3DE991DB5AD05004CDF78 /* Mapbox.framework */,
 				00CEA4BA1D95EB5B00C5F290 /* GTFS */,
+				00BE358A1DF67FEF006721EE /* Resources */,
 				00CEA4CF1D95EB5C00C5F290 /* GTFSTests */,
 				00CEA4DA1D95EB5C00C5F290 /* GTFSUITests */,
 				00CEA4B91D95EB5B00C5F290 /* Products */,
@@ -257,6 +276,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				00BE358D1DF682C7006721EE /* chevron-circle-up.png in Resources */,
 				00CEA4C61D95EB5C00C5F290 /* LaunchScreen.storyboard in Resources */,
 				00CEA4C31D95EB5C00C5F290 /* Assets.xcassets in Resources */,
 				00CEA4C11D95EB5C00C5F290 /* Main.storyboard in Resources */,
