@@ -31,7 +31,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
         locationManager.requestLocation()
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
         
-        // run the xml parser
+        // run the xml parser immediately and on 5-second intervals thereafter
         let timer = Timer.scheduledTimer(timeInterval: 5.0, target: self, selector: #selector(self.refreshData), userInfo: nil, repeats: true)
         timer.fire()
         self.addVehiclesToMap(v: updatedVehicles)
@@ -85,7 +85,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     
     // parser delegates
     
-    // uses vehicle element attributes to create a vehicle object and saves object to an array of vehicles
+    // uses vehicle element attributes to create a vehicle object and appends object to an array of vehicles
     func parser(_ parser: XMLParser,
                 didStartElement elementName: String,
                 namespaceURI: String?,
