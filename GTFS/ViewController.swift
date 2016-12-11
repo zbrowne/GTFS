@@ -97,7 +97,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
             var lon = CLLocationDegrees()
             var secsSinceReport = Int()
             var predictable = Bool()
-            var heading = Int()
+            var heading = Double()
             var speedKmHr = Double()
             
             guard
@@ -123,7 +123,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
             }
             
             if let attributeHeading = attributeDict["heading"] as String? {
-                heading = Int(attributeHeading)!
+                heading = Double(attributeHeading)!
             }
             
             if let attributeSpeedKmHr = attributeDict["speedKmHr"] as String? {
@@ -174,6 +174,35 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     }
 }
 
+extension Double {
+    func toRadians() -> CGFloat {
+        return CGFloat(self * .pi / 180.0)
+    }
+}
+
+// helper extension used to transform image based on header
+extension UIImage {
+    func rotated(by degrees: Double, flipped: Bool = false) -> UIImage? {
+        guard let cgImage = self.cgImage else { return nil }
+        
+        let transform = CGAffineTransform(rotationAngle: degrees.toRadians())
+        let size = CGSize(width: 20, height: 20)
+        UIGraphicsBeginImageContext(size)
+        var rect = CGRect(origin: .zero, size: size).applying(transform)
+        rect.origin = .zero
+        
+        let renderer = UIGraphicsImageRenderer(size: rect.size)
+        return renderer.image { renderContext in
+            renderContext.cgContext.translateBy(x: rect.midX, y: rect.midY)
+            renderContext.cgContext.rotate(by: degrees.toRadians())
+            renderContext.cgContext.scaleBy(x: flipped ? -1.0 : 1.0, y: -1.0)
+            
+            let drawRect = CGRect(origin: CGPoint(x: -size.width/2, y: -size.height/2), size: size)
+            renderContext.cgContext.draw(cgImage, in: drawRect)
+        }
+    }
+}
+
 // extention for mapview delegates
 
 extension ViewController: MGLMapViewDelegate {
@@ -188,14 +217,8 @@ extension ViewController: MGLMapViewDelegate {
         var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: reuseIdentifier)
         
         if annotationImage == nil {
-            if let image = UIImage(named: "chevron-circle-up.png") {
-                let size = CGSize(width: 20, height: 20)
-                UIGraphicsBeginImageContext(size)
-                let rect = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-                image.draw(in: rect)
-                if let resizedImage = UIGraphicsGetImageFromCurrentImageContext() {
-                    annotationImage = MGLAnnotationImage(image: resizedImage, reuseIdentifier: "\(vehicle.title)")
-                }
+            if let image = UIImage(named: "chevron-circle-up.png")?.rotated(by: vehicle.heading) {
+                annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: "\(vehicle.title)")
             }
         }
         

@@ -44,7 +44,7 @@ class Vehicle: NSObject, MGLAnnotation {
     dynamic var coordinate: CLLocationCoordinate2D
     var secsSinceReport: Int
     var predictable: Bool
-    var heading: Int
+    var heading: Double
     var speedKmHr: Double
     var leadingVehicleId: String?
     
@@ -55,7 +55,7 @@ class Vehicle: NSObject, MGLAnnotation {
          lon: CLLocationDegrees,
          secsSinceReport: Int,
          predictable: Bool,
-         heading: Int,
+         heading: Double,
          speedKmHr: Double,
          leadingVehicleId: String?) {
         
@@ -69,8 +69,4 @@ class Vehicle: NSObject, MGLAnnotation {
         self.speedKmHr = speedKmHr
         self.leadingVehicleId = leadingVehicleId
     }
-    
-    var location: CLLocation? {
-        return CLLocation(latitude: (coordinate.latitude), longitude: (coordinate.longitude))
-    } 
 }
