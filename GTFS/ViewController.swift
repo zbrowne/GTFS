@@ -21,6 +21,11 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     var lastUpdated = String()
     let regionRadius: CLLocationDistance = 20000
     
+    
+    var routeTag = String()
+    var routeDict = [Int:[CLLocationCoordinate2D]]()
+    var arrayNumber = 0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -32,10 +37,13 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
         locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
         
         // run the xml parser immediately and on 5-second intervals thereafter
-        let timer = Timer.scheduledTimer(timeInterval: 5.0, target: self, selector: #selector(self.refreshData), userInfo: nil, repeats: true)
+      /*  let timer = Timer.scheduledTimer(timeInterval: 5.0, target: self, selector: #selector(self.refreshData), userInfo: nil, repeats: true)
         timer.fire()
-        self.addVehiclesToMap(v: updatedVehicles)
+        self.addVehiclesToMap(v: updatedVehicles) */
+    
+        self.refreshRouteData()
     }
+        
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -55,9 +63,24 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
     }
     
+    func refreshRouteData() {
+        print ("refreshing route data")
+        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=sf-muni&r=N")
+        let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
+        let session = URLSession.shared
+        
+        session.dataTask(with: URLRequest) {data, URLResponse, err in
+            self.xmlParser = XMLParser(data: data!)
+            self.xmlParser.delegate = self
+            self.xmlParser.parse()
+            print (self.routeDict)
+            //self.createRouteObject()
+        }.resume()
+    }
+    
     // reads nextbus xml data and starts the xml parser delegate methods
     
-    func refreshData() {
+/*    func refreshData() {
         let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=sf-muni")
         let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
         let session = URLSession.shared
@@ -81,7 +104,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
             self.elements.removeAll()
             NSLog ("task completed")
             }.resume()
-    }
+    } */
     
     // parser delegates
     
@@ -145,7 +168,43 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
                 print ("time of last update not available")
             }
         }
+        
+        print (elementName)
+        
+        if elementName == "route" {
+            guard let x = attributeDict["tag"] as String? else {
+                return
+            }
+            routeTag = x
+        }
+        
+        if elementName == "path" {
+            var newArray = [CLLocationCoordinate2D]()
+            if elementName == "point" {
+                var lat = CLLocationDegrees()
+                var lon = CLLocationDegrees()
+                if let attributeLat = attributeDict["lat"] as String?, let attributeLon = attributeDict["lon"] as String? {
+                    lat = CLLocationDegrees(attributeLat)!
+                    lon = CLLocationDegrees(attributeLon)!
+                    let coordinate = CLLocationCoordinate2DMake(lat, lon)
+                    newArray.append(coordinate)
+                }
+            }
+            routeDict[arrayNumber] = newArray
+            arrayNumber += 1
+        }
     }
+    
+    // checker function
+    /*func createRouteObject() {
+        let route = Route(routeTag: routeTag, routeCoordinates: routeCoordinates)
+        print ("We created route " + (route.routeTag) + " and it has " + String(route.routeCoordinates.count) + " points")
+        let routeLine = MGLPolyline(coordinates: &route.routeCoordinates, count: UInt(route.routeCoordinates.count))
+        mapView.addAnnotation(routeLine)
+        for x in routeCoordinates {
+            print (x.latitude, x.longitude)
+        }
+    }*/
     
     // parses each element and appends it to an array of elements
     func parser(_ parser: XMLParser, foundCharacters string: String) {
