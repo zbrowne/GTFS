@@ -10,7 +10,6 @@
 		009579821DBD42D600B423A0 /* Mapbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00A3DE991DB5AD05004CDF78 /* Mapbox.framework */; };
 		009579831DBD42D600B423A0 /* Mapbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 00A3DE991DB5AD05004CDF78 /* Mapbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		00B8ADE21DFDFB320040F75A /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B8ADE11DFDFB320040F75A /* Route.swift */; };
-		00BE358D1DF682C7006721EE /* chevron-circle-up.png in Resources */ = {isa = PBXBuildFile; fileRef = 00BE358C1DF682C7006721EE /* chevron-circle-up.png */; };
 		00CB2F671D98852A00B7E6B7 /* Vehicle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CB2F661D98852A00B7E6B7 /* Vehicle.swift */; };
 		00CEA4BC1D95EB5C00C5F290 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CEA4BB1D95EB5C00C5F290 /* AppDelegate.swift */; };
 		00CEA4BE1D95EB5C00C5F290 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CEA4BD1D95EB5C00C5F290 /* ViewController.swift */; };
@@ -19,6 +18,7 @@
 		00CEA4C61D95EB5C00C5F290 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 00CEA4C41D95EB5C00C5F290 /* LaunchScreen.storyboard */; };
 		00CEA4D11D95EB5C00C5F290 /* GTFSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CEA4D01D95EB5C00C5F290 /* GTFSTests.swift */; };
 		00CEA4DC1D95EB5C00C5F290 /* GTFSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CEA4DB1D95EB5C00C5F290 /* GTFSUITests.swift */; };
+		00E34FB91E97495F007B04BF /* arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 00E34FB81E97495F007B04BF /* arrow.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,7 +55,6 @@
 /* Begin PBXFileReference section */
 		00A3DE991DB5AD05004CDF78 /* Mapbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Mapbox.framework; sourceTree = "<group>"; };
 		00B8ADE11DFDFB320040F75A /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
-		00BE358C1DF682C7006721EE /* chevron-circle-up.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "chevron-circle-up.png"; sourceTree = "<group>"; };
 		00CB2F661D98852A00B7E6B7 /* Vehicle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Vehicle.swift; sourceTree = "<group>"; };
 		00CEA4B81D95EB5B00C5F290 /* GTFS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GTFS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		00CEA4BB1D95EB5C00C5F290 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -70,6 +69,7 @@
 		00CEA4D71D95EB5C00C5F290 /* GTFSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GTFSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00CEA4DB1D95EB5C00C5F290 /* GTFSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GTFSUITests.swift; sourceTree = "<group>"; };
 		00CEA4DD1D95EB5C00C5F290 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		00E34FB81E97495F007B04BF /* arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = arrow.png; path = ../../Desktop/arrow.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,7 +109,7 @@
 		00BE358B1DF6800D006721EE /* Images */ = {
 			isa = PBXGroup;
 			children = (
-				00BE358C1DF682C7006721EE /* chevron-circle-up.png */,
+				00E34FB81E97495F007B04BF /* arrow.png */,
 			);
 			name = Images;
 			sourceTree = "<group>";
@@ -279,9 +279,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				00BE358D1DF682C7006721EE /* chevron-circle-up.png in Resources */,
 				00CEA4C61D95EB5C00C5F290 /* LaunchScreen.storyboard in Resources */,
 				00CEA4C31D95EB5C00C5F290 /* Assets.xcassets in Resources */,
+				00E34FB91E97495F007B04BF /* arrow.png in Resources */,
 				00CEA4C11D95EB5C00C5F290 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

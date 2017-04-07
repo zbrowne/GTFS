@@ -41,7 +41,10 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
         timer.fire()
         self.addVehiclesToMap(v: updatedVehicles)
     
-        self.refreshRouteData()
+        let routes = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+        for route in routes {
+        self.refreshRouteData(route)
+        }
     }
         
     
@@ -63,9 +66,9 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
     }
     
-    func refreshRouteData() {
+    func refreshRouteData(_ route: String) {
         print ("refreshing route data")
-        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=reno&r=RAPD")
+        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=actransit&r=" + route)
         let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
         let session = URLSession.shared
         
@@ -81,7 +84,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     // reads nextbus xml data and starts the xml parser delegate methods
     
     func refreshData() {
-        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=reno")
+        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=actransit")
         let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
         let session = URLSession.shared
         
@@ -290,7 +293,6 @@ extension UIImage {
 extension ViewController: MGLMapViewDelegate {
     
     func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
-        
         // we only want vehicle annotations
          guard let vehicle = annotation as? Vehicle else {
             return nil
@@ -299,10 +301,11 @@ extension ViewController: MGLMapViewDelegate {
         var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: reuseIdentifier)
         
         if annotationImage == nil {
-            if let image = UIImage(named: "chevron-circle-up.png")?.rotated(by: vehicle.heading) {
+            if let image = UIImage(named: "arrow.png")?.rotated(by: vehicle.heading) {
                 annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: "\(vehicle.title)")
             }
         }
+        
         return annotationImage
     }
     

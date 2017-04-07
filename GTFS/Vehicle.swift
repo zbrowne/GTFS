@@ -48,6 +48,7 @@ class Vehicle: NSObject, MGLAnnotation {
     var speedKmHr: Double
     var leadingVehicleId: String?
     
+    
     init(title: String?,
          routeTag: String,
          dirTag: String?,
