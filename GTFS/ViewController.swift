@@ -11,9 +11,11 @@ import Mapbox
 
 class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDelegate {
     
+    @IBOutlet weak var buyPassesButton: UIButton!
     @IBOutlet var mapView: MGLMapView!
     var xmlParser: XMLParser!
     let locationManager = CLLocationManager()
+    let routes = ["12","14","3CL"]
     
     var updatedVehicles = [Vehicle]()
     var oldVehicles = [Vehicle]()
@@ -30,6 +32,10 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
         super.viewDidLoad()
         
         self.mapView.styleURL = MGLStyle.lightStyleURL(withVersion: 9)
+        self.mapView.isRotateEnabled = false
+        self.mapView.isPitchEnabled = false
+        
+        buyPassesButton.layer.cornerRadius = 8
         
         // Requests user's location once to trigger locationManager function that zooms to user's current location
         locationManager.delegate = self;
@@ -41,7 +47,6 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
         timer.fire()
         self.addVehiclesToMap(v: updatedVehicles)
     
-        let routes = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
         for route in routes {
         self.refreshRouteData(route)
         }
@@ -51,6 +56,13 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    @IBAction func didTapBuy(sender: AnyObject) {
+        if let url = URL(string: "http://www.tokentransit.com/app") {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+        print("tapped 'Buy Passes' button")
     }
     
     // zooms to user's current location
@@ -68,7 +80,7 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
     
     func refreshRouteData(_ route: String) {
         print ("refreshing route data")
-        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=actransit&r=" + route)
+        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=reno&r=" + route)
         let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
         let session = URLSession.shared
         
@@ -77,14 +89,14 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
             self.xmlParser.delegate = self
             self.xmlParser.parse()
             print (String(self.routeDict.count) + " paths on route " + self.routeTag)
-            self.createRouteObject()
+            self.createRouteObject(color: UIColor.blue)
         }.resume()
     }
     
     // reads nextbus xml data and starts the xml parser delegate methods
     
     func refreshData() {
-        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=actransit")
+        let urlString = NSURL(string: "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=reno")
         let URLRequest:URLRequest = NSURLRequest(url:urlString! as URL) as URLRequest
         let session = URLSession.shared
         
@@ -225,13 +237,14 @@ class ViewController: UIViewController, XMLParserDelegate, CLLocationManagerDele
         elements.append(string)
     }
 
-    func createRouteObject() {
+    func createRouteObject(color: UIColor) {
         let route = Route(routeTag: routeTag, routeDict: routeDict)
-        var annotations = [MGLPolyline]()
+        var annotations = [CustomPolyline]()
         for (key, paths) in route.routeDict {
             var p = paths
             print ("Mapping path " + String(key))
-            let routeLine = MGLPolyline(coordinates: &p, count: UInt(p.count))
+            let routeLine = CustomPolyline(coordinates: &p, count: UInt(p.count))
+            routeLine.color = color
             annotations.append(routeLine)
         }
         mapView.addAnnotations(annotations)
@@ -294,15 +307,17 @@ extension ViewController: MGLMapViewDelegate {
     
     func mapView(_ mapView: MGLMapView, imageFor annotation: MGLAnnotation) -> MGLAnnotationImage? {
         // we only want vehicle annotations
-         guard let vehicle = annotation as? Vehicle else {
+        let defaultTitle = "n/a"
+        
+        guard let vehicle = annotation as? Vehicle else {
             return nil
          }
-        let reuseIdentifier = "\(vehicle.title)"
+        let reuseIdentifier = "\(vehicle.title ?? defaultTitle)"
         var annotationImage = mapView.dequeueReusableAnnotationImage(withIdentifier: reuseIdentifier)
         
         if annotationImage == nil {
             if let image = UIImage(named: "arrow.png")?.rotated(by: vehicle.heading) {
-                annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: "\(vehicle.title)")
+                annotationImage = MGLAnnotationImage(image: image, reuseIdentifier: "\(vehicle.title ?? defaultTitle)")
             }
         }
         
@@ -332,6 +347,24 @@ extension ViewController: MGLMapViewDelegate {
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
     }
+    
+    func mapView(_ mapView: MGLMapView, strokeColorForShapeAnnotation annotation: MGLShape) -> UIColor {
+        if let annotation = annotation as? CustomPolyline {
+            // Return orange if the polyline does not have a custom color.
+            return annotation.color ?? .orange
+        }
+        
+        // Fallback to the default tint color.
+        return mapView.tintColor
+    }
+}
+
+// MGLPolyline subclass
+class CustomPolyline: MGLPolyline {
+    // Because this is a subclass of MGLPolyline, there is no need to redeclare its properties.
+    
+    // Custom property that we will use when drawing the polyline.
+    var color: UIColor?
 }
 
 
